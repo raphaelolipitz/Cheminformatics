@@ -105,12 +105,24 @@ def main():
     optimizer = optim.Adam(Predictor.parameters(), lr=0.001)
 
     # train the NN-Model
-    epochs = 1000
+    number_of_epochs = 1000
 
-    for i in range(epochs):  # trains the NN 1,000 times.
+    for epoch in range(number_of_epochs):  # trains the NN 1,000 times.
         X , y = data
         Predictor.zero_grad()
 
+        #calculating and printing the Loss and the accuraacy of the Predictor every 10 epochs.
+        if epoch % 10 == 0:
+            train_acc = calculate_accuracy(y_train, y_pred)
+            y_test_pred = net(X_test)
+            y_test_pred = torch.squeeze(y_test_pred)
+            test_loss = criterion(y_test_pred, y_test)
+            test_acc = calculate_accuracy(y_test, y_test_pred)
+            print(
+                f'''epoch {epoch}
+        Train set - loss: {round_tensor(train_loss)}, accuracy: {round_tensor(train_acc)}
+        Test  set - loss: {round_tensor(test_loss)}, accuracy: {round_tensor(test_acc)}
+        ''')
     #safing our trained Predictor.
     MODEL_PATH = 'predicter-model.pth'
     torch.save(Predictor, MODEL_PATH)
