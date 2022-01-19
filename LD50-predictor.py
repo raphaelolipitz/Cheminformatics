@@ -96,15 +96,28 @@ def main():
 
     Predictor = Neural_Network()
     print(Predictor)
-    optimizer = optim.Adam(Predictor.parameters(), lr = 0.001)
 
+
+    #loss function from torch for Mean Square Function
+    loss = nn.MSELoss()
+
+    # optimizer for the gradient decent.
+    optimizer = optim.Adam(Predictor.parameters(), lr=0.001)
+
+    # train the NN-Model
     epochs = 1000
 
-    for i in range(epochs):  # trains the NN 1,000 times
+    for i in range(epochs):  # trains the NN 1,000 times.
         X , y = data
         Predictor.zero_grad()
 
+    #safing our trained Predictor.
+    MODEL_PATH = 'predicter-model.pth'
+    torch.save(Predictor, MODEL_PATH)
 
+
+    # resoring the model for using it.
+    #Predictor = torch.load(MODEL_PATH)
 
 
 #start of the program
