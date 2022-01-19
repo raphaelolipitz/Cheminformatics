@@ -39,11 +39,7 @@ def datapreprossessing():
 
     Data["SMILES"] =smi
     Data["Fingerprints"] = fp
-
-
-
-
-
+    Data.info()
     #first I want to split the data into a train a validation and a test set with the sklearn packege.
     #one of the common ratios for splitting the data.
     train_ratio = 0.70
@@ -53,6 +49,7 @@ def datapreprossessing():
     x_train, x_test, y_train, y_test = train_test_split(Data, Data, test_size= 1 - train_ratio)
     x_val, x_test, y_val, y_test = train_test_split(x_test, y_test, test_size= test_ratio / (test_ratio + validation_ratio))
 
+    print(x_train, x_test, y_train, y_test)
 
 
     return Data
@@ -81,14 +78,6 @@ class Neural_Network(nn.Module):
         return x
 
 
-
-
-
-
-
-
-
-
 #start of the funktions
 def main():
     datapreprossessing()
@@ -109,8 +98,16 @@ def main():
 
     for epoch in range(number_of_epochs):  # trains the NN 1,000 times.
         X , y = data
-        Predictor.zero_grad()
 
+        #Force Optimizer to do 1-Step.
+        optimizer.step()
+
+        # Backpropagation for the learningprocess.
+        loss.backward()
+
+        #IMPORTEND: After the Optimizer making a step the gradient must set to zero.
+        Predictor.zero_grad()
+        
         #calculating and printing the Loss and the accuraacy of the Predictor every 10 epochs.
         if epoch % 10 == 0:
             train_acc = calculate_accuracy(y_train, y_pred)
