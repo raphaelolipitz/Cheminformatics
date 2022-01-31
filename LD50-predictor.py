@@ -32,10 +32,10 @@ def datapreprossessing():
     for mol in mols:
         smi.append(Chem.MolToSmiles(mol))
 
-    #calculate the MorgenFingerprint as Vector for the molocules? Maybe a nother Fingerprint would be better.
+    #calculate the MorgenFingerprint(ecfp6) as Vector for the molocules.
     fp = []
     for mol in mols:
-        fp.append(AllChem.GetMorganFingerprintAsBitVect(mol, useChirality=True, radius=2, nBits = 124))
+        fp.append(AllChem.GetMorganFingerprintAsBitVect(mol, useChirality=True, radius=3, nBits = 4096))
 
     Data["SMILES"] =smi
     Data["Fingerprints"] = fp
@@ -61,9 +61,9 @@ class Neural_Network(nn.Module):
         super(Neural_Network, self).__init__()
 
         # parameters
-        self.inputSize = 124
+        self.inputSize = 4096
         self.outputSize = 1
-        self.hiddenSize = 124
+        self.hiddenSize = 4096
 
         # Defined Layer imputlayer is as big as the Fingerprint(124bits). Outputlayer is 1 for one LD50 value.
         self.input_layer = nn.Linear(self.inputSize, self.hiddenSize)
@@ -107,7 +107,7 @@ def main():
 
         #IMPORTEND: After the Optimizer making a step the gradient must set to zero.
         Predictor.zero_grad()
-        
+
         #calculating and printing the Loss and the accuraacy of the Predictor every 10 epochs.
         if epoch % 10 == 0:
             train_acc = calculate_accuracy(y_train, y_pred)
