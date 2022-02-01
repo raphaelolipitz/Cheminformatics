@@ -57,7 +57,7 @@ def check_logp(dataset):
 def logS(logP, MWT,RB,AP):
     return 0.16-0.63*logP-0.0062*MWT+0.066*RB-0.74*AP
 
-
+#calculating the solubility of the molecules
 def check_logS(dataset):
 
     all_smiles = dataset['SMILES']
@@ -82,7 +82,28 @@ def check_logS(dataset):
     return logS_values
 
 
+#cacking if molecule if it have a aromatic ring.
+def ceck_aromaticity(dataset):
+    all_smiles = dataset['SMILES']
 
+    aromaticities = []
+    for smiles in all_smiles:
+        mol = MolFromSmiles(smiles)
+        num = mol.GetNumAtoms()
+        temp = []
+        for i in range(num):
+            is_aromatic = mol.GetAtomWithIdx(i).GetIsAromatic()
+            if is_aromatic == True:
+                temp.append(1)
+                break
+            if is_aromatic == False:
+                temp.append(0)
+        if 1 in temp:
+            aromaticities.append(1)
+        else:
+            aromaticities.append(0)
+        temp.clear()
+    return aromaticities
 
 
 
@@ -115,7 +136,9 @@ def datapreprossessing():
     total , logp_score_per_molecule = check_logp(Data)
 
 
-    print(check_logS(Data))
+    print(ceck_aromaticity(Data))
+    print(len(ceck_aromaticity(Data)))
+
 
 
     #first I want to split the data into a train a validation and a test set with the sklearn packege.
