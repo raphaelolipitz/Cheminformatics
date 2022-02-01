@@ -1,12 +1,16 @@
 #install all packages for the predictor
 import torch
+from pandas.io import pickle
 from rdkit import Chem
-from rdkit.Chem import AllChem
+from rdkit.Chem import AllChem, Crippen, MolFromSmiles, AddHs
 from rdkit.Chem import PandasTools
+from rdkit.Chem import rdchem
 import pandas as pd
 from IPython.core.display import HTML
 import os
 from rdkit import RDConfig
+from rdkit.Chem.Descriptors import ExactMolWt
+from rdkit.Chem import Lipinski
 from sklearn.model_selection import train_test_split
 from numpy import loadtxt
 import torch.autograd as autograd         # computation graph
@@ -15,6 +19,72 @@ import torch.nn as nn                     # neural networks
 import torch.nn.functional as F           # layers, activations and more
 import torch.optim as optim               # optimizers e.g. gradient descent, ADAM, etc.
 from torch.jit import script, trace       # hybrid frontend decorator and tracing jit
+'''
+import argparse
+
+parser = argparse.ArgumentParser(description='Arguments for the Nussinov algorithm')
+
+parser.add_argument('-i', "--imput", type=argparse.FileType('r'))
+parser.add_argument("-o", "--output", action='store', dest='output', help="Directs the output to a name of your choice")
+
+args = parser.parse_args()
+
+seq = args.i.readlines()[1:]
+
+args.i.close()
+'''
+
+
+
+#helper function
+
+def check_logp(dataset):
+    all_smiles = dataset["SMILES"]
+    logp_sum=0
+    total=0
+    logp_score_per_molecule=[]
+    for smiles in all_smiles:
+        new_mol=Chem.MolFromSmiles(smiles)
+        try:
+            val = Crippen.MolLogP(new_mol)
+        except:
+            continue
+        logp_sum+=val
+        logp_score_per_molecule.append(val)
+        total+=1
+    return logp_sum/total, logp_score_per_molecule
+
+def logS(logP, MWT,RB,AP):
+    return 0.16-0.63*logP-0.0062*MWT+0.066*RB-0.74*AP
+
+
+def check_logS(dataset):
+
+    all_smiles = dataset['SMILES']
+
+    logS_values = []
+    total, logP_values = check_logp(dataset)
+
+
+    c = 0
+    for smiles in all_smiles:
+        mol = AddHs(MolFromSmiles(smiles))
+
+        MWT = ExactMolWt(mol)
+        RB = Chem.Lipinski.NumRotatableBonds(mol)
+        AP = len(list(mol.GetAromaticAtoms())) / mol.GetNumAtoms(onlyExplicit=True)
+        logP = logP_values[c]
+        c+=1
+        logS_values.append(logS(logP,MWT,RB,AP))
+
+
+
+    return logS_values
+
+
+
+
+
 
 
 
@@ -40,6 +110,14 @@ def datapreprossessing():
     Data["SMILES"] =smi
     Data["Fingerprints"] = fp
     Data.info()
+
+    #calculating logP values vor every molecule in the file.
+    total , logp_score_per_molecule = check_logp(Data)
+
+
+    print(check_logS(Data))
+
+
     #first I want to split the data into a train a validation and a test set with the sklearn packege.
     #one of the common ratios for splitting the data.
     train_ratio = 0.70
@@ -49,7 +127,7 @@ def datapreprossessing():
     x_train, x_test, y_train, y_test = train_test_split(Data, Data, test_size= 1 - train_ratio)
     x_val, x_test, y_val, y_test = train_test_split(x_test, y_test, test_size= test_ratio / (test_ratio + validation_ratio))
 
-    print(x_train, x_test, y_train, y_test)
+    #print(x_train, x_test, y_train, y_test)
 
 
     return Data
