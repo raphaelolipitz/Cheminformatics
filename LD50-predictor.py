@@ -1,4 +1,5 @@
 #install all packages for the predictor
+import matplotlib.pyplot as plt
 import torch
 from pandas.io import pickle
 from rdkit import Chem
@@ -81,7 +82,6 @@ def check_logS(dataset):
 
     return logS_values
 
-
 #cacking if molecule if it have a aromatic ring.
 def ceck_aromaticity(dataset):
     all_smiles = dataset['SMILES']
@@ -104,6 +104,9 @@ def ceck_aromaticity(dataset):
             aromaticities.append(0)
         temp.clear()
     return aromaticities
+
+def calculating_pka(dataset):
+    all_smiles = dataset['SMILES']
 
 
 
@@ -136,10 +139,18 @@ def datapreprossessing():
     total , logp_score_per_molecule = check_logp(Data)
 
 
-    print(ceck_aromaticity(Data))
-    print(len(ceck_aromaticity(Data)))
+    fig, ax = plt.subplots()
+    x_lim = ax.set_xlim(min(logp_score_per_molecule), max(logp_score_per_molecule))
+    y_lim = ax.set_ylim(min(logp_score_per_molecule), max(logp_score_per_molecule))
 
-
+    ax.plot([min(logp_score_per_molecule), max(logp_score_per_molecule)],[min(logp_score_per_molecule), max(logp_score_per_molecule)], color = "black")
+    ax.scatter(logp_score_per_molecule, logp_score_per_molecule, alpha=0.75, color="blue", s=20)
+    ax.set_xlabel('predicted values',
+                  fontweight='bold')
+    ax.set_ylabel('real values',
+                  fontweight='bold')
+    plt.savefig("prediction.png")
+    plt.show()
 
     #first I want to split the data into a train a validation and a test set with the sklearn packege.
     #one of the common ratios for splitting the data.
