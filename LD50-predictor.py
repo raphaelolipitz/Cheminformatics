@@ -1,9 +1,10 @@
 #install all packages for the predictor
 import matplotlib.pyplot as plt
+import rdkit
 import torch
 from pandas.io import pickle
 from rdkit import Chem
-from rdkit.Chem import AllChem, Crippen, MolFromSmiles, AddHs
+from rdkit.Chem import AllChem, Crippen, MolFromSmiles, AddHs, rdMolDescriptors
 from rdkit.Chem import PandasTools
 from rdkit.Chem import rdchem
 import pandas as pd
@@ -38,6 +39,16 @@ args.i.close()
 
 
 #helper function
+
+def find_functional_groups(dataset):
+    all_smiles = dataset['SMILES']
+    all_ring_numbers = []
+    for smiles in all_smiles:
+        mol = AddHs(MolFromSmiles(smiles))
+        all_ring_numbers.append(rdMolDescriptors.CalcNumAromaticRings(mol))
+    return all_ring_numbers
+
+
 
 def check_logp(dataset):
     all_smiles = dataset["SMILES"]
@@ -119,6 +130,8 @@ Data = PandasTools.LoadSDF(SDFFile,smilesName='SMILES',
                            removeHs=False, strictParsing=True)
 
 
+
+
 def datapreprossessing():
     #compute the SMILES repressentation for the molecules
     smi = []
@@ -137,7 +150,7 @@ def datapreprossessing():
 
     #calculating logP values vor every molecule in the file.
     total , logp_score_per_molecule = check_logp(Data)
-
+    find_functional_groups(Data)
 
     fig, ax = plt.subplots()
     x_lim = ax.set_xlim(min(logp_score_per_molecule), max(logp_score_per_molecule))
